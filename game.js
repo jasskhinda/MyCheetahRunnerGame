@@ -7,11 +7,11 @@ let gameSpeed = 3;
 let gravity = 1.2;
 let score = 0;
 let isGameOver = false;
-let lives = 3;
+let lives = 5; // Starting with 5 lives
 
 // Load cheetah image
 const cheetahImg = new Image();
-cheetahImg.src = 'cheetah.gif'; // Updated to use 'cheetah.gif'
+cheetahImg.src = 'cheetah.gif'; // Using 'cheetah.gif'
 
 // Player (cheetah) object
 const cheetah = {
@@ -45,6 +45,36 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
+// Handle mouse click for the extra life
+canvas.addEventListener('click', (e) => {
+    if (offerExtraLife) {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        // Set font to match the one used in draw()
+        ctx.font = '20px Arial';
+
+        // Calculate text position and size
+        const text = 'Click here';
+        const textWidth = ctx.measureText(text).width;
+        const textX = (canvas.width / 2) - (textWidth / 2);
+        const textY = canvas.height / 2 + 60; // Same as in draw()
+        const textHeight = 20; // Approximate height of the text
+
+        // Check if click is within the "Click here" text bounds
+        if (
+            mouseX >= textX &&
+            mouseX <= textX + textWidth &&
+            mouseY >= textY - textHeight &&
+            mouseY <= textY
+        ) {
+            lives += 1; // Grant one extra life
+            offerExtraLife = false; // Hide the offer
+        }
+    }
+});
+
 // Game loop
 function gameLoop() {
     update();
@@ -52,7 +82,10 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-// Update game objects
+// Variables for extra life offer
+let offerExtraLife = false;
+let lastExtraLifeScore = 0; // Tracks the last score at which an extra life was offered
+
 function update() {
     if (isGameOver) return;
 
@@ -96,9 +129,14 @@ function update() {
             height: obstacleHeight
         });
     }
+
+    // Offer extra life every time score increases by 3
+    if (score >= lastExtraLifeScore + 3 && !offerExtraLife) {
+        offerExtraLife = true;
+        lastExtraLifeScore = score;
+    }
 }
 
-// Draw game objects
 function draw() {
     // Clear the canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -119,6 +157,22 @@ function draw() {
     ctx.font = '20px Arial';
     ctx.fillText(`Score: ${score}`, 10, 30);
     ctx.fillText(`Lives: ${lives}`, 100, 30);
+
+    // If offer extra life, display the message
+    if (offerExtraLife) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.fillRect(50, canvas.height / 2 - 70, canvas.width - 100, 140);
+
+        ctx.fillStyle = '#000';
+        ctx.font = '24px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(`You scored ${lastExtraLifeScore}!`, canvas.width / 2, canvas.height / 2 - 10);
+        ctx.fillText('We have a reward for you:', canvas.width / 2, canvas.height / 2 + 20);
+        ctx.font = '20px Arial';
+        ctx.fillStyle = 'blue';
+        ctx.fillText('Click here', canvas.width / 2, canvas.height / 2 + 60);
+        ctx.textAlign = 'left'; // Reset text alignment
+    }
 
     // If game over, display message
     if (isGameOver) {
@@ -157,13 +211,15 @@ function restartGame() {
     gravity = 1.2;
     score = 0;
     isGameOver = false;
-    lives = 3;
+    lives = 5; // Reset to 5 lives
     obstacles.length = 0; // Clear obstacles array
     cheetah.x = 50;
     cheetah.y = canvas.height - 70;
     cheetah.vy = 0;
     cheetah.isJumping = false;
     gameStartTime = Date.now();
+    offerExtraLife = false;
+    lastExtraLifeScore = 0; // Reset the extra life score tracker
 }
 
 // Start the game
