@@ -5,51 +5,18 @@
     <title>Cheetah Runner Game</title>
     <style>
         body {
-            margin: 0;
-            overflow: hidden;
             background-color: #f0f0f0;
         }
-        #gameContainer {
-            position: relative;
-            width: 100%;
-            height: 100vh;
-        }
-        #gameCanvas {
-            background-color: #fff;
+        canvas {
             display: block;
-            width: 100%;
-            height: 100%;
-        }
-        #jumpButton {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 15px 30px;
-            font-size: 18px;
-            background-color: #28a745;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            z-index: 1;
-        }
-        #jumpButton:active {
-            background-color: #218838;
-        }
-        /* Hide the jump button on larger screens */
-        @media (min-width: 768px) {
-            #jumpButton {
-                display: none;
-            }
+            margin: 50px auto;
+            background-color: #fff;
+            border: 1px solid #000;
         }
     </style>
 </head>
 <body>
-    <div id="gameContainer">
-        <canvas id="gameCanvas"></canvas>
-        <button id="jumpButton">JUMP</button>
-    </div>
+    <canvas id="gameCanvas" width="800" height="200"></canvas>
     <script src="game.js"></script>
 </body>
 </html>
