@@ -2,6 +2,16 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
+// Set canvas size to fill the window
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    // Update cheetah's initial position based on new canvas size
+    cheetah.y = canvas.height - cheetah.height - groundHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
 // Game variables
 let gameSpeed = 3;
 let gravity = 1.2;
@@ -9,14 +19,16 @@ let score = 0;
 let isGameOver = false;
 let lives = 5; // Starting with 5 lives
 
+const groundHeight = 20;
+
 // Load cheetah image
 const cheetahImg = new Image();
-cheetahImg.src = 'cheetah.gif'; // Using 'cheetah.gif'
+cheetahImg.src = 'cheetah.gif';
 
 // Player (cheetah) object
 const cheetah = {
     x: 50,
-    y: canvas.height - 70,
+    y: canvas.height - 70 - groundHeight,
     width: 50,
     height: 50,
     vy: 0,
@@ -45,32 +57,25 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// Handle mouse click for the extra life
-canvas.addEventListener('click', (e) => {
-    if (offerExtraLife) {
-        const rect = canvas.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
+// Handle touch events for mobile devices
+canvas.addEventListener('touchstart', (e) => {
+    if (!isGameOver) {
+        if (!cheetah.isJumping) {
+            cheetah.vy = cheetah.jumpStrength;
+            cheetah.isJumping = true;
+        }
+    } else {
+        restartGame();
+    }
+});
 
-        // Set font to match the one used in draw()
-        ctx.font = '20px Arial';
-
-        // Calculate text position and size
-        const text = 'Click here';
-        const textWidth = ctx.measureText(text).width;
-        const textX = (canvas.width / 2) - (textWidth / 2);
-        const textY = canvas.height / 2 + 60; // Same as in draw()
-        const textHeight = 20; // Approximate height of the text
-
-        // Check if click is within the "Click here" text bounds
-        if (
-            mouseX >= textX &&
-            mouseX <= textX + textWidth &&
-            mouseY >= textY - textHeight &&
-            mouseY <= textY
-        ) {
-            lives += 1; // Grant one extra life
-            offerExtraLife = false; // Hide the offer
+// Handle JUMP button click
+const jumpButton = document.getElementById('jumpButton');
+jumpButton.addEventListener('click', () => {
+    if (!isGameOver) {
+        if (!cheetah.isJumping) {
+            cheetah.vy = cheetah.jumpStrength;
+            cheetah.isJumping = true;
         }
     }
 });
@@ -94,8 +99,8 @@ function update() {
     cheetah.vy += gravity;
 
     // Ground collision
-    if (cheetah.y + cheetah.height >= canvas.height) {
-        cheetah.y = canvas.height - cheetah.height;
+    if (cheetah.y + cheetah.height >= canvas.height - groundHeight) {
+        cheetah.y = canvas.height - cheetah.height - groundHeight;
         cheetah.isJumping = false;
     }
 
@@ -124,7 +129,7 @@ function update() {
         const obstacleHeight = 30;
         obstacles.push({
             x: canvas.width,
-            y: canvas.height - obstacleHeight,
+            y: canvas.height - obstacleHeight - groundHeight,
             width: 15,
             height: obstacleHeight
         });
@@ -141,6 +146,10 @@ function draw() {
     // Clear the canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // Draw ground
+    ctx.fillStyle = '#654321';
+    ctx.fillRect(0, canvas.height - groundHeight, canvas.width, groundHeight);
+
     // Draw cheetah
     if (!isGameOver) {
         ctx.drawImage(cheetahImg, cheetah.x, cheetah.y, cheetah.width, cheetah.height);
@@ -156,7 +165,7 @@ function draw() {
     ctx.fillStyle = '#000';
     ctx.font = '20px Arial';
     ctx.fillText(`Score: ${score}`, 10, 30);
-    ctx.fillText(`Lives: ${lives}`, 100, 30);
+    ctx.fillText(`Lives: ${lives}`, 120, 30);
 
     // If offer extra life, display the message
     if (offerExtraLife) {
@@ -188,7 +197,7 @@ function draw() {
 
         ctx.font = '20px Arial';
         ctx.fillText(`Your score: ${score}`, canvas.width / 2, canvas.height / 2 + 20);
-        ctx.fillText('Press Enter to Restart', canvas.width / 2, canvas.height / 2 + 60);
+        ctx.fillText('Tap to Restart', canvas.width / 2, canvas.height / 2 + 60);
 
         ctx.textAlign = 'left'; // Reset text alignment
     }
@@ -214,7 +223,7 @@ function restartGame() {
     lives = 5; // Reset to 5 lives
     obstacles.length = 0; // Clear obstacles array
     cheetah.x = 50;
-    cheetah.y = canvas.height - 70;
+    cheetah.y = canvas.height - cheetah.height - groundHeight;
     cheetah.vy = 0;
     cheetah.isJumping = false;
     gameStartTime = Date.now();
@@ -236,3 +245,17 @@ cheetahImg.onerror = () => {
     };
     gameLoop();
 };
+
+// Handle click or touch to restart the game when game over
+canvas.addEventListener('click', () => {
+    if (isGameOver) {
+        restartGame();
+    }
+});
+
+canvas.addEventListener('touchstart', (e) => {
+    if (isGameOver) {
+        e.preventDefault(); // Prevents double-triggering on mobile devices
+        restartGame();
+    }
+});
